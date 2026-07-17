@@ -1,22 +1,74 @@
 import sqlite3
 
+BANCO = "garimpofree.db"
+
+
 def conectar():
-    return sqlite3.connect("garimpofree.db")
+    return sqlite3.connect(BANCO)
 
 
 def criar_banco():
-    conexao = conectar()
-    cursor = conexao.cursor()
+    conn = conectar()
+    cursor = conn.cursor()
 
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS oportunidades(
+    CREATE TABLE IF NOT EXISTS oportunidades (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        produto TEXT,
+        titulo TEXT,
         descricao TEXT,
-        valor TEXT,
-        link TEXT
+        categoria TEXT,
+        cidade TEXT,
+        fonte TEXT,
+        link TEXT,
+        preco REAL,
+        score INTEGER,
+        nivel TEXT,
+        data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
 
-    conexao.commit()
-    conexao.close()
+    conn.commit()
+    conn.close()
+
+
+def salvar_oportunidade(
+    titulo,
+    descricao,
+    categoria,
+    cidade,
+    fonte,
+    link,
+    preco,
+    score,
+    nivel
+):
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    INSERT INTO oportunidades(
+        titulo,
+        descricao,
+        categoria,
+        cidade,
+        fonte,
+        link,
+        preco,
+        score,
+        nivel
+    )
+    VALUES(?,?,?,?,?,?,?,?,?)
+    """, (
+        titulo,
+        descricao,
+        categoria,
+        cidade,
+        fonte,
+        link,
+        preco,
+        score,
+        nivel
+    ))
+
+    conn.commit()
+    conn.close()
