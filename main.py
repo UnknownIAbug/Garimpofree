@@ -102,3 +102,12 @@ Foram encontradas {enviadas} oportunidades.
 
 
 bot.infinity_polling()
+from coletores.shopee import ColetorShopee
+
+
+coletor = ColetorShopee()
+
+produtos = coletor.buscar()
+
+for produto in produtos:
+    print(produto)
