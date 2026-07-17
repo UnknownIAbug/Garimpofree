@@ -3,6 +3,7 @@ import telebot
 
 from database.database import criar_banco, salvar_oportunidade
 from ia.classificador import pontuar
+from garimpo.buscador import buscar_oportunidades
 
 TOKEN = os.getenv("TOKEN")
 
@@ -16,9 +17,10 @@ def start(message):
     bot.reply_to(
         message,
         "🔎 GarimpoFree iniciado!\n\n"
+        "Sistema inteligente de garimpo de oportunidades.\n\n"
         "Comandos disponíveis:\n"
-        "/status\n"
-        "/garimpo"
+        "/garimpo - Buscar oportunidades\n"
+        "/status - Verificar sistema"
     )
 
 
@@ -26,42 +28,76 @@ def start(message):
 def status(message):
     bot.reply_to(
         message,
-        "✅ Sistema funcionando corretamente."
+        "✅ GarimpoFree funcionando corretamente."
     )
 
 
 @bot.message_handler(commands=['garimpo'])
 def garimpo(message):
 
-    titulo = "Notebook Dell gratuito"
+    oportunidades = buscar_oportunidades()
 
-    descricao = "Doação de notebook Dell para retirada hoje."
+    enviadas = 0
 
-    resultado = pontuar(titulo + " " + descricao)
+    for oportunidade in oportunidades:
 
-    salvar_oportunidade(
-        titulo=titulo,
-        descricao=descricao,
-        categoria="Informática",
-        cidade="Corumbá",
-        fonte="Teste",
-        link="https://garimpofree.com",
-        preco=0,
-        score=resultado["score"],
-        nivel=resultado["nivel"]
-    )
+        resultado = pontuar(
+            oportunidade["titulo"] + " " + oportunidade["descricao"]
+        )
 
-    bot.reply_to(
-        message,
-        f"""🔎 Oportunidade encontrada!
+        salvar_oportunidade(
+            titulo=oportunidade["titulo"],
+            descricao=oportunidade["descricao"],
+            categoria=oportunidade["categoria"],
+            cidade=oportunidade["cidade"],
+            fonte=oportunidade["fonte"],
+            link=oportunidade["link"],
+            preco=oportunidade["preco"],
+            score=resultado["score"],
+            nivel=resultado["nivel"]
+        )
 
-📦 {titulo}
+        if resultado["score"] >= 8:
 
-⭐ Score: {resultado['score']}
+            bot.send_message(
+                message.chat.id,
+                f"""
+🔥 OPORTUNIDADE ENCONTRADA
 
-🏆 Classificação: {resultado['nivel']}
+📦 Produto: {oportunidade['titulo']}
 
-💾 Salva no banco de dados."""
+📝 Descrição:
+{oportunidade['descricao']}
+
+💰 Preço:
+R$ {oportunidade['preco']}
+
+⭐ Score:
+{resultado['score']}
+
+🏆 Classificação:
+{resultado['nivel']}
+
+📍 Cidade:
+{oportunidade['cidade']}
+
+🌐 Fonte:
+{oportunidade['fonte']}
+
+🔗 Link:
+{oportunidade['link']}
+"""
+            )
+
+            enviadas += 1
+
+    bot.send_message(
+        message.chat.id,
+        f"""
+✅ Garimpo finalizado!
+
+Foram encontradas {enviadas} oportunidades.
+"""
     )
 
 
